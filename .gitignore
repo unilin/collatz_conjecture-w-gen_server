@@ -3,6 +3,6 @@
 .erlang.mk/*
 deps/*
 ebin/*
-collatz_conjecture-w-gen_server.d
-.collatz_conjecture-w-gen_server.plt
+collatz_conjecture_w_gen_server.d
+.collatz_conjecture_w_gen_server.plt
 cover/
