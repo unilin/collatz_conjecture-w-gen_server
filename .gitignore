@@ -1,0 +1,8 @@
+*~
+*.beam
+.erlang.mk/*
+deps/*
+ebin/*
+collatz_conjecture-w-gen_server.d
+.collatz_conjecture-w-gen_server.plt
+cover/
