@@ -2,45 +2,34 @@
 
 -module(worker).
 -behaviour(gen_server).
--export([steps/1]).
+-export([steps/1, calc_collatz_seq/2]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 -record(worker_state, {tasks = [], results = []}).
+
+calc_collatz_seq(N, ServerPid) ->
+    gen_server:call(ServerPid, {task, N}).
 
 %--------------------------------Gen_server-----------------------------------------------------
 
 init([]) -> {ok, #worker_state{}}.
 
-handle_call(Task, From, #worker_state{tasks = Tasks, results = Results} = State) ->
-       Reply =
-             Result = steps(Task),
-             From ! {self(), Result},
-       State1 = State#worker_state{tasks = [Task | Tasks], results = [Result | Results]},
-       {reply, Reply, State1};
+handle_call({task, Task}, _From, #worker_state{tasks = Tasks, results = OldResults} = State) ->
+       NewResult = steps(Task),
+       State1 = State#worker_state{tasks = [Task | Tasks], results = [NewResult | OldResults]},
+       {reply, NewResult, State1};
 
-handle_call(get_all_tasks, From, #worker_state{tasks = Tasks} = State) ->
-       Reply =
-          From ! Tasks,
-       {reply, Reply, State};
+handle_call(get_all_tasks, _From, #worker_state{tasks = Tasks} = State) ->
+       {reply, Tasks, State};
 
-handle_call(get_all_results, From, #worker_state{results = Results} = State) ->
-       Reply =
-           From ! Results,
-       {reply, Reply, State};
+handle_call(get_all_results, _From, #worker_state{results = Results} = State) ->
+       {reply, Results, State};
 
-handle_call(get_last_result, From, #worker_state{results = Results} = State) when Results =:= [] ->
-       Reply =
-           From ! undefined,
-       {reply, Reply, State};
+handle_call(get_last_result, _From, #worker_state{results = Results} = State) when Results =:= [] ->
+       {reply, unfedined, State};
 
-handle_call(get_last_result, From, #worker_state{results = Results} = State) ->
-       Reply =
-           From ! hd(Results),
-       {reply, Reply, State};
+handle_call(get_last_result, _From, #worker_state{results = [LastResult|_T]} = State) ->
+       {reply, LastResult, State}.
 
-handle_call(make_me_sia, _From, State) ->
-       Reply =
-           ok,
-      {reply, Reply, State}.
 
 handle_cast(_Msg, State) -> {noreply, State}.
 
