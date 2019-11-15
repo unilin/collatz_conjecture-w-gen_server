@@ -2,12 +2,29 @@
 
 -module(worker).
 -behaviour(gen_server).
--export([steps/1, calc_collatz_seq/2]).
+-export([steps/1, calc_collatz_seq/2,get_all_tasks/1,get_all_results/1,get_last_result/1]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 -record(worker_state, {tasks = [], results = []}).
 
 calc_collatz_seq(N, ServerPid) ->
-    gen_server:call(ServerPid, {task, N}).
+    gen_server:call(ServerPid, {task, N}). % send message to gen_server and wait for reply
+    % ServerPid ! {{task, N}, self()}
+    % receive
+    % ....
+    % end
+
+get_all_tasks(ServerPid) ->
+    gen_server:call(ServerPid, get_all_tasks).
+
+get_all_results(ServerPid) ->
+    gen_server:call(ServerPid, get_all_results).
+
+get_last_result(ServerPid) ->
+    gen_server:call(ServerPid, get_last_result).
+%%calc_collatz_seq2(N, ReplyTo, ServerPid) -> %%just for study,not for this task
+%%    gen_server:cast(ServerPid, {task, N, ReplyTo}). % send message to gen_server and don't wait for reply
+    % ServerPid ! {task, N, ReplyTo}
+    % caller don't enter receive routine
 
 %--------------------------------Gen_server-----------------------------------------------------
 
@@ -25,11 +42,17 @@ handle_call(get_all_results, _From, #worker_state{results = Results} = State) ->
        {reply, Results, State};
 
 handle_call(get_last_result, _From, #worker_state{results = Results} = State) when Results =:= [] ->
-       {reply, unfedined, State};
+       {reply, undefined, State};
 
 handle_call(get_last_result, _From, #worker_state{results = [LastResult|_T]} = State) ->
        {reply, LastResult, State}.
 
+
+%handle_cast({task, Task, ReplyTo}, State) ->
+%    NewResult = steps(Task),
+%    ReplyTo ! NewResult,
+%    State1 = State#worker_state{tasks = [Task | Tasks], results = [NewResult | OldResults]},
+%    {noreply, State1}.
 
 handle_cast(_Msg, State) -> {noreply, State}.
 
