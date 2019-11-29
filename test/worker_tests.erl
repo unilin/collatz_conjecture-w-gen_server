@@ -9,9 +9,9 @@ steps_test() -> %test steps.
     ?assertEqual({error, "Only positive numbers are available"}, worker:steps(0)).
 
 gen_server_test() ->
-    {ok, Pid} = gen_server:start_link(worker, [], []),
-    ?assert(true, is_process_alive(Pid)),
-    Result = worker:calc_collatz_seq(10, Pid),
+    {ok, Pid} = gen_server:start_link(worker, [], []),% start gen_server
+    ?assert(true, is_process_alive(Pid)), %test process alive or not
+    Result = worker:calc_collatz_seq(10, Pid), %test handle_call
     ?assertEqual(6, Result),
     Result1 = worker:calc_collatz_seq(2, Pid),
     ?assertEqual(1, Result1),
@@ -39,6 +39,6 @@ gen_server_test() ->
             ?assertEqual(18, LastResult)
     end,
 
-    Result3 = worker:calc_collatz_seq2(10, self(), Pid),
+    Result3 = worker:calc_collatz_seq2(10, self(), Pid), %test handle_cast
     ?assert(true, Result3).
 

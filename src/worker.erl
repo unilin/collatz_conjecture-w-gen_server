@@ -1,4 +1,12 @@
-
+%%%  File:      worke.erl
+%%%  @auther    Jie Lin < unilin328@gmail.com >
+%%%
+%%%  @doc
+%%%  Solve the  Collatz conjecture problem via gen_server.
+%%%
+%%%  @end
+%%%
+%%%
 
 -module(worker).
 -behaviour(gen_server).
