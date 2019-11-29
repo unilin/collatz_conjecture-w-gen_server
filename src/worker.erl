@@ -2,7 +2,7 @@
 
 -module(worker).
 -behaviour(gen_server).
--export([steps/1, calc_collatz_seq/2,get_all_tasks/1,get_all_results/1, get_last_result/1,for_calculate/0]).
+-export([steps/1, calc_collatz_seq/2,calc_collatz_seq2/3,get_all_tasks/1,get_all_results/1, get_last_result/1,for_calculate/0]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
 -record(worker_state, {tasks = [], results = []}).
@@ -41,10 +41,15 @@ get_all_results(ServerPid) ->
 get_last_result(ServerPid) ->
     gen_server:call(ServerPid, get_last_result).
 
-%%calc_collatz_seq2(N, ReplyTo, ServerPid) -> %%just for study,not for this task
-%%    gen_server:cast(ServerPid, {task, N, ReplyTo}). % send message to gen_server and don't wait for reply
-    % ServerPid ! {task, N, ReplyTo}
-    % caller don't enter receive routine
+-spec calc_collatz_seq2(Number, ReplyTo, ServerPid) -> Result when
+     Number    :: non_neg_integer(),
+     ReplyTo   :: pid(),
+     ServerPid :: pid(),
+     Result    :: non_neg_integer().
+calc_collatz_seq2(N, ReplyTo, ServerPid) ->
+     gen_server:cast(ServerPid, {task, N, ReplyTo}). % send message to gen_server and don't wait for reply
+     % ServerPid ! {task, N, ReplyTo}
+     % caller don't enter receive routine
 
 -spec for_calculate() -> Result when
     Result      :: pid().
@@ -84,17 +89,15 @@ handle_call(get_last_result, _From, #worker_state{results = Results} = State) wh
 handle_call(get_last_result, _From, #worker_state{results = [LastResult|_T]} = State) ->
        {reply, LastResult, State}.
 
-
-%handle_cast({task, Task, ReplyTo}, State) ->
-%    NewResult = steps(Task),
-%    ReplyTo ! NewResult,
-%    State1 = State#worker_state{tasks = [Task | Tasks], results = [NewResult | OldResults]},
-%    {noreply, State1}.
 -spec handle_cast(Message, State) -> Result when
-     Message   :: term(),
-     State     :: term(),
-     Result    :: {noreply, State}.
-handle_cast(_Msg, State) -> {noreply, State}.
+      Message  :: {task, pos_integer(), pid()},
+      State    :: worker_state(),
+      Result   :: {noreply, worker_state}.
+handle_cast({task, Task, ReplyTo}, #worker_state{tasks = Tasks, results = OldResults}=State) ->
+    NewResult = steps(Task),
+    ReplyTo ! {self(), NewResult},% ReplyTo is where the result send
+    State1 = State#worker_state{tasks = [Task | Tasks], results = [NewResult | OldResults]},
+    {noreply, State1}.
 
 -spec handle_info(Info, State) -> Result when
       Info     :: term(),

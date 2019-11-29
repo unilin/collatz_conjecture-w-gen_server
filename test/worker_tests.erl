@@ -37,4 +37,8 @@ gen_server_test() ->
             ?assert(undefined);
         LastResult ->
             ?assertEqual(18, LastResult)
-    end.
+    end,
+
+    Result3 = worker:calc_collatz_seq2(10, self(), Pid),
+    ?assert(true, Result3).
+
